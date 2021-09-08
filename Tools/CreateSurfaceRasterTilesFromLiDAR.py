@@ -105,8 +105,7 @@ def createRasters():
             outRaster = join(RasterFolder, '{0}_{1}.tif'.format(rasterName, fileName))
             AddMessage('    Creating {0} {1} of {2}  ({3})'.format(rasterName, i + 1, len(filesToProcess),
                                                                          fileName))
-            LasDatasetToRaster(inLasDataset, outRaster, "ELEVATION", None, "FLOAT", "CELLSIZE",
-                                                cellSize, 1)
+            LasDatasetToRaster(inLasDataset, outRaster, "ELEVATION", None, "FLOAT", "CELLSIZE", cellSize, 1)
             env.snapRaster = outRaster
             SetProgressorPosition()
     return

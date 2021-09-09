@@ -31,6 +31,8 @@ def las_files_extents(in_lasd, out_fc):
             return [f"{f[0]}.gdb", f[1]]
         elif in_file.endswith(".shp"):
             return split(in_file)
+        elif split(in_file)[0] in ["memory", "in_memory"]:
+            return split(in_file)
 
     sr = Describe(in_lasd).spatialReference
     if Exists(out_fc):
@@ -53,12 +55,3 @@ def las_files_extents(in_lasd, out_fc):
             cursor.insertRow([coordinates, i[5], i[0], i[5], i[6], count])
             count += 1
     return out_fc
-
-
-if __name__ == "__main__":
-    in_lasd = r'C:\Users\geoff.taylor\Documents\ArcGIS\Projects\Nearmap_Processing\Nearmap_PhoDAR_2020.lasd'
-    las_files = get_las_tiles_from_lasd(in_lasd)
-    out_fc = r'C:\Users\geoff.taylor\Documents\ArcGIS\Projects\Nearmap_Processing\tester.shp'
-    #out_fc = r'C:\Users\geoff.taylor\Documents\ArcGIS\Projects\Nearmap_Processing\Nearmap_Processing.gdb\testerOOO'
-    las_files_extents(in_lasd, out_fc)
-    print("complete")

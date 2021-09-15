@@ -320,7 +320,7 @@ def pointcloud_updater(in_source_lasd, in_update_lasd, output_folder, output_las
 
 
 if __name__ == "__main__":
-    debug = True
+    debug = False
     if debug:
         in_source_lasd = r'C:\Users\geoff.taylor\Documents\ArcGIS\Projects\Boston\ARRA_LFTNE_Massachusetts_2011.lasd'
         in_update_lasd = r'C:\Users\geoff.taylor\Documents\ArcGIS\Projects\Boston\Nearmap_PhoDAR_2020_1p4.lasd'

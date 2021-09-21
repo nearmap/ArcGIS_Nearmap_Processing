@@ -1,5 +1,5 @@
 from arcpy.ddd import ExtractLas
-from arcpy import env, GetParameterAsText, GetParameter
+from arcpy import env, GetParameterAsText, GetParameter, CheckExtension, CheckOutExtension, CheckInExtension, ExecuteError, GetMessages
 from arcpy.management import Dissolve, Delete, LasPointStatsAsRaster, EliminatePolygonPart, CopyFeatures, GetCount, \
     PolygonToLine, AddField, CalculateField, DeleteField, RepairGeometry, Sort, CreateLasDataset
 from arcpy.analysis import Intersect, SpatialJoin, Select, Union
@@ -17,6 +17,16 @@ from las_lib import check_consistent_sr
 from glob import glob
 from shutil import copyfile, rmtree
 from tempfile import gettempdir
+
+
+# error classes
+
+class LicenseError3D(Exception):
+    pass
+
+
+class LicenseErrorSpatial(Exception):
+    pass
 
 
 ######################################
@@ -311,12 +321,30 @@ def generate_pointcloud_cookie_cutter(in_source_lasd, in_update_lasd, output_fol
 
 def pointcloud_updater(in_source_lasd, in_update_lasd, output_folder, output_lasd, retile, number_splits,
                        update_lasd_clipping_geom):
-    in_cookie_cutter_fc, in_source_tile_extents = generate_pointcloud_cookie_cutter(in_source_lasd, in_update_lasd,
-                                                                                    output_folder,
-                                                                                    update_lasd_clipping_geom)
-    cut_tile(in_source_lasd, in_update_lasd, in_cookie_cutter_fc, in_source_tile_extents, output_folder, output_lasd,
-             retile, number_splits)
-    delete_if_exists([in_cookie_cutter_fc, in_source_tile_extents])
+    ext_list = ["3D", "Spatial"]
+    try:
+        for ext in ext_list:
+            if CheckExtension(ext) == "Available":
+                CheckOutExtension(ext)
+
+        in_cookie_cutter_fc, in_source_tile_extents = generate_pointcloud_cookie_cutter(in_source_lasd, in_update_lasd,
+                                                                                        output_folder,
+                                                                                        update_lasd_clipping_geom)
+        cut_tile(in_source_lasd, in_update_lasd, in_cookie_cutter_fc, in_source_tile_extents, output_folder, output_lasd,
+                 retile, number_splits)
+        delete_if_exists([in_cookie_cutter_fc, in_source_tile_extents])
+
+    except LicenseError3D:
+        AddError("3D Analyst license is unavailable")
+
+    except LicenseErrorSpatial:
+        AddError("Spatial Analyst license is unavailable")
+
+    except ExecuteError:
+        AddError(GetMessages(2))
+
+    finally:
+        [CheckInExtension(ext) for ext in ext_list]
 
 
 if __name__ == "__main__":

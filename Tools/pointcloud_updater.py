@@ -29,6 +29,10 @@ class LicenseErrorSpatial(Exception):
     pass
 
 
+class LicenseError(Exception):
+    pass
+
+
 ######################################
 # PointCloud Cookie Cutter Functions
 ####################################
@@ -326,6 +330,8 @@ def pointcloud_updater(in_source_lasd, in_update_lasd, output_folder, output_las
         for ext in ext_list:
             if CheckExtension(ext) == "Available":
                 CheckOutExtension(ext)
+            else:
+                raise LicenseError
 
         in_cookie_cutter_fc, in_source_tile_extents = generate_pointcloud_cookie_cutter(in_source_lasd, in_update_lasd,
                                                                                         output_folder,

@@ -12,8 +12,8 @@ Tools for working with Nearmap Data in ArcGIS Pro
 # GeoProcessing Tools Included:
 
 - **PointCloud Processing Toolbox**: _(License Requirements: ArcGIS Pro, 3D Analyst, Spatial Analyst)_
-  - **PointCloud Updater**: Process for updating areas of an existing point-cloud with new point-cloud collects.
-  - **Create LAS Dataset Recursive**: Process for updating areas of an existing point-cloud with new point-cloud collects.
+  - **PointCloud Updater**: Process for updating areas of an existing PointCloud with new PointCloud collects.
+  - **Create LAS Dataset Recursive**: Process for generating LAS Datasets (.lasd file) from data generated in the "PointCloud Updater GP tool".
     - _Note: required as Esri's default create las dataset will not recursively search folders for lidar files._
 
 

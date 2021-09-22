@@ -11,13 +11,13 @@ Tools for working with Nearmap Data in ArcGIS Pro
 
 # GeoProcessing Tools Included:
 
-- **PointCloud Processing Toolbox**:
+- **PointCloud Processing Toolbox**: (License Requirements: ArcGIS Pro, 3D Analyst, Spatial Analyst)
   - **PointCloud Updater**: Process for updating areas of an existing point-cloud with new point-cloud collects.
   - **Create LAS Dataset Recursive**: Process for updating areas of an existing point-cloud with new point-cloud collects.
     - _Note: required as Esri's default create las dataset will not recursively search folders for lidar files._
 
 
-- **Create Surface Raster Tiles Toolbox**:
+- **Create Surface Raster Tiles Toolbox**: (License Requirements: ArcGIS Pro, 3D Analyst)
   - **Create Surface Raster Tiles from PointClouds**: Process for generating Raster Surface Tiles from PointCloud data
   - **Create Surface Raster Mosaic**: Process for generating mosaic datasets for surface raster data generated in the "Create Surface Raster Tiles from PointClouds GP tool"
   

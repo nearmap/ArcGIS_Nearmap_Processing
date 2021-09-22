@@ -179,8 +179,8 @@ def las_data_boundary(in_lasd, scratch_folder, out_fc, clipping_geom, simplify=T
     # TODO: describe lidar to determine appropriate pixel size
     Path(scratch_folder).mkdir(parents=True, exist_ok=True)
     # Extract actual point-cloud extent from lasd as raster
-    if clipping_geom:
-        env.extent = clipping_geom
+    #if clipping_geom:
+    #    env.extent = clipping_geom
     temp_pt_stats_raster = join(scratch_folder, "temp_pt_stats_raster.tif")
     delete_if_exists(temp_pt_stats_raster)
     LasPointStatsAsRaster(in_lasd, temp_pt_stats_raster, "INTENSITY_RANGE", "CELLSIZE", 0.5)

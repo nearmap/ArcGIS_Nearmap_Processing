@@ -1,4 +1,5 @@
-# ArcGIS_Nearmap_Processing
+# ArcGIS_Nearmap_Data_Processing
+
 Tools for working with Nearmap Data in ArcGIS Pro
 
 1.) Download the GitHub Repo.

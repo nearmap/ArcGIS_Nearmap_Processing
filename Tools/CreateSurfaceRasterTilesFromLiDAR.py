@@ -12,7 +12,8 @@
 # -------------------------------------------------------------------------------
 
 from arcpy import Describe, AddError, AddMessage, Exists, da, env, SetProgressor, SetProgressorLabel, \
-    SetProgressorPosition, ResetProgressor, GetParameterAsText
+    SetProgressorPosition, ResetProgressor, GetParameterAsText, CheckExtension, CheckOutExtension, CheckInExtension, \
+    ExecuteError, GetMessages
 from arcpy.analysis import Buffer
 from arcpy.management import LasDatasetStatistics, CreateFileGDB, Delete
 from arcpy.conversion import LasDatasetToRaster
@@ -20,6 +21,22 @@ from arcpy.ddd import PointFileInformation
 from os.path import join, splitext, exists
 from os import makedirs, remove
 from math import ceil
+
+env.overwriteOutput = True
+
+# error classes
+
+
+class LicenseError3D(Exception):
+    pass
+
+
+class LicenseErrorSpatial(Exception):
+    pass
+
+
+class LicenseError(Exception):
+    pass
 
 
 def get_las_tiles_from_lasd(in_lasd):
@@ -83,7 +100,7 @@ def getBufferDist(inFeature):
         return '{}'.format(ceil(float(cellSize) * 3.048))
 
 
-def createLasFootprints():
+def createLasFootprints(filesToProcess, lasExtent, suffix, spatialRef, lasExtentBuff):
     """Create LAS footprints"""
     AddMessage('Creating LAS Footprints...')
     PointFileInformation(';'.join(filesToProcess), lasExtent, "LAS", suffix, spatialRef, "NO_RECURSION",
@@ -94,7 +111,7 @@ def createLasFootprints():
     return
 
 
-def createRasters():
+def createRasters(lasExtentBuff, RasterFolder, filesToProcess):
     """Create DEM Raster"""
     AddMessage('Creating Raster Tile data...')
     with da.UpdateCursor(lasExtentBuff, ["FileName", "shape@"]) as cursor:
@@ -111,62 +128,82 @@ def createRasters():
     return
 
 
-###################################
-env.overwriteOutput = True
+def main_op():
+    ext_list = ["3D"]
+    try:
+        for ext in ext_list:
+            if CheckExtension(ext) == "Available":
+                CheckOutExtension(ext)
+            else:
+                raise LicenseError
 
-# Capture input; create outFolder
-inLasDataset = GetParameterAsText(0)
-outFolder = GetParameterAsText(1)
-cellSize = GetParameterAsText(2)
-rasterName = GetParameterAsText(3)
+        if not exists(outFolder):
+            makedirs(outFolder)
 
-if not exists(outFolder):
-    makedirs(outFolder)
+        # Obtain LiDAR tile Info from Folder
+        fileNames = []
+        lasCount = 0
+        zlasCount = 0
 
-# Obtain LiDAR tile Info from Folder
-fileNames = []
-lasCount = 0
-zlasCount = 0
+        las_files = get_las_tiles_from_lasd(inLasDataset)
+        for fileName in las_files:
+            if fileName.endswith('.zlas'):
+                zlasCount = zlasCount + 1
+                fileNames.append(fileName)
+            if fileName.endswith('.las'):
+                lasCount = lasCount + 1
+                fileNames.append(fileName)
 
-las_files = get_las_tiles_from_lasd(inLasDataset)
-for fileName in las_files:
-    if fileName.endswith('.zlas'):
-        zlasCount = zlasCount + 1
-        fileNames.append(fileName)
-    if fileName.endswith('.las'):
-        lasCount = lasCount + 1
-        fileNames.append(fileName)
+        # Check that LiDAR tiles exist in folder directory location
+        SetProgressor("step", "Processing Tiles...", 0, len(fileNames), 1)
+        if lasCount == 0 and zlasCount == 0:
+            AddMessage("Cancelling Process as 0 LAS or zLAS tiles detected")
+            exit()
+        elif lasCount > 0 and zlasCount > 0:
+            AddMessage("Cancelling Process as {0} zLAS and {1} LAS files detected in process".format(zlasCount, lasCount))
+            exit()
+        else:
+            # Process the LAS files
+            spatialRef = Describe(inLasDataset).SpatialReference
+            filesToProcess = las_files
+            suffix = splitext(fileNames[0])[1].replace('.', '')
 
-# Check that LiDAR tiles exist in folder directory location
-SetProgressor("step", "Processing Tiles...", 0, len(fileNames), 1)
-if lasCount == 0 and zlasCount == 0:
-    AddMessage("Cancelling Process as 0 LAS or zLAS tiles detected")
-    exit()
-elif lasCount > 0 and zlasCount > 0:
-    AddMessage("Cancelling Process as {0} zLAS and {1} LAS files detected in process".format(zlasCount, lasCount))
-    exit()
-else:
-    # Process the LAS files
-    spatialRef = Describe(inLasDataset).SpatialReference
-    filesToProcess = las_files
-    suffix = splitext(fileNames[0])[1].replace('.', '')
+            # Set names/values
+            outGDB = createGDB('Mosaic.gdb')
+            lasExtent = join(outGDB, 'tempTiles')
+            lasExtentBuff = join(outGDB, 'Tiles')
+            RasterFolder = createFolder('{0}_Tiles'.format(rasterName))
 
-    # Set names/values
-    outGDB = createGDB('Mosaic.gdb')
-    lasExtent = join(outGDB, 'tempTiles')
-    lasExtentBuff = join(outGDB, 'Tiles')
-    RasterFolder = createFolder('{0}_Tiles'.format(rasterName))
+            #processingSteps = (len(fileNames) * 2) + 3  # 2x las files [UPDATE T] + 1 for creating fps, lasDatasets, mosaics
+            processingSteps = (len(fileNames))
+            SetProgressor('step', 'Processing Files...', 0, processingSteps, 1)
 
-    processingSteps = (len(fileNames)*2) + 3  # 2x las files [UPDATE THIS] plus 1 for creating fps, lasDatasets, mosaics
-    SetProgressor('step', 'Processing Files...', 0, processingSteps, 1)
+            SetProgressorLabel('Creating footprints')
+            createLasFootprints(filesToProcess, lasExtent, suffix, spatialRef, lasExtentBuff)
+            SetProgressorPosition()
 
-    SetProgressorLabel('Creating footprints')
-    createLasFootprints()
-    SetProgressorPosition()
+            SetProgressorLabel('Creating Rasters')
+            createRasters(lasExtentBuff, RasterFolder, filesToProcess)
 
-    SetProgressorLabel('Creating Rasters')
-    createRasters()
+        ResetProgressor()
+        AddMessage('Script Complete')
 
-ResetProgressor()
-AddMessage('Script Complete')
-exit()
+    except LicenseError3D:
+        AddError("3D Analyst license is unavailable")
+
+    except ExecuteError:
+        AddError(GetMessages(2))
+
+    finally:
+        [CheckInExtension(ext) for ext in ext_list]
+
+
+if __name__ == "__main__":
+
+    # Capture input; create outFolder
+    inLasDataset = GetParameterAsText(0)
+    outFolder = GetParameterAsText(1)
+    cellSize = GetParameterAsText(2)
+    rasterName = GetParameterAsText(3)
+
+    main_op()

@@ -1,4 +1,4 @@
-# ArcGIS Nearmap Data Processing Tools
+# Nearmap Data Processing Tools for ArcGIS Pro
 
 Tools for working with Nearmap Data in ArcGIS Pro
 

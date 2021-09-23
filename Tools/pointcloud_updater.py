@@ -162,9 +162,8 @@ def cut_tile(in_source_lasd, in_update_lasd, in_cookie_cutter_fc, in_source_tile
             aprx = ArcGISProject("CURRENT")
             for m in aprx.listMaps():
                 if m.mapType == "MAP":
-                    # arcpy.AddMessage('map={}'.format(m.name))
                     m.addDataFromPath(out_lasd)
-                elif m.maptype == "SCENE":
+                elif m.mapType == "SCENE":
                     m.addDataFromPath(out_lasd)
         except:
             pass

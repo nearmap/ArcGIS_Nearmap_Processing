@@ -49,9 +49,8 @@ AddMessage('Adding results to map views...')
 aprx = ArcGISProject("CURRENT")
 for m in aprx.listMaps():
     if m.mapType == "MAP":
-        #arcpy.AddMessage('map={}'.format(m.name))
         m.addDataFromPath(mosaicDS)
-    elif m.maptype == "SCENE":
+    elif m.mapType == "SCENE":
         m.addDataFromPath(mosaicDS)
 
 AddMessage("Process complete")
